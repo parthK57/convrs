@@ -17,35 +17,25 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
   cors: {
-    origin: "http://127.0.0.1:5173",
+    origin: "http://localhost:5173",
   },
 });
 
 io.on("connection", (socket: any) => {
-  io.emit("server", "You are now connected to the server!");
+  io.emit("confirm", "You are now connected to the server!");
 
+  // **JOIN A ROOM - GET DATA FROM FRONTEND CODE ===> socket.emit("join-room", {room:room});
   socket.on("join-room", (data: any) => {
-    socket.join(data);
+    socket.join(data.room);
+    socket.emit("response", `Roger that!Joining room: ${data.room}`);
   });
 
   socket.on("private-message", (data: any) => {
-    socket.to(data.room).emit("server-resp",data.message);
-  })
+    // **this is how you send a private message IO.(SOCKETS).IN(ROOM).EMIT("NAME OF THE EVENT"), DATA<MESSAGE>); REF:https://www.tutorialspoint.com/socket.io/socket.io_rooms.htm
+    io.sockets.in(data.room).emit("receive-message", data);
+  });
 });
 
-const database: any = [];
-
-// Routes
-app.get("/", (req: any, res: any) => res.status(200).json({ server: "Live" }));
-app.post("/sendmessage", (req: any, res: any) => {
-    const body = req.body;
-    const username = body.username;
-    const room = body.room;
-    const message = body.message;
-
-    database.push({username: username, room: room, message: message});
-    res.status(200).send("Received!");
-})
 
 server.listen(process.env.PORT, () =>
   console.log(`Server live at PORT:${process.env.PORT}`)

@@ -1,0 +1,21 @@
+const [room, setRoom] = useState("");
+  const [username, setUsername] = useState("");
+  const [message, setMessage] = useState("");
+
+  const socket = io("http://localhost:4000");
+
+  const joinRoom = (e: Event) => {
+    e.preventDefault();
+    socket.emit("join-room", { room: room });
+    // GET THE RESPONSE FROM SERVER SENT ON THE EVENT "response"
+    socket.on("response", (data) => console.log(data));
+  };
+  const sendMessage = (e: Event) => {
+    e.preventDefault();
+    socket.emit("private-message", { room: room, message: message });
+    socket.on("confirm", (data) => console.log(data));
+  };
+
+  useEffect(()=>{
+    socket.on("receive-message", (data:any)=>console.log(data));
+  },[socket])
