@@ -4,6 +4,7 @@ import { Server } from "socket.io";
 import cors from "cors";
 import bodyParser from "body-parser";
 import dotenv from "dotenv";
+import ErrorHandler from "./Services/ErrorHandler";
 
 dotenv.config({
   path: "../.env",
@@ -35,6 +36,23 @@ io.on("connection", (socket: any) => {
     io.sockets.in(data.room).emit("receive-message", data);
   });
 });
+
+// Routes
+import userRouter from "./routes/users";
+import messageRouter from "./routes/messages";
+import friendsRouter from "./routes/friends";
+
+app.use(userRouter);
+app.use(messageRouter)
+app.use(friendsRouter);
+
+// Error Handler
+app.use((error: ErrorHandler, req: any, res: any, next: any) => {
+  const message = error.message || "Server Error!";
+  const statusCode = error.statusCode || 500;
+
+  res.status(statusCode).send(message);
+})
 
 
 server.listen(process.env.PORT, () =>
