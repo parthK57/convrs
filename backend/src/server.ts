@@ -41,10 +41,12 @@ io.on("connection", (socket: any) => {
 import userRouter from "./routes/users";
 import messageRouter from "./routes/messages";
 import friendsRouter from "./routes/friends";
+import groupsRouter from "./routes/groups";
 
 app.use(userRouter);
-app.use(messageRouter)
+app.use(messageRouter);
 app.use(friendsRouter);
+app.use(groupsRouter);
 
 // Error Handler
 app.use((error: ErrorHandler, req: any, res: any, next: any) => {
@@ -52,8 +54,7 @@ app.use((error: ErrorHandler, req: any, res: any, next: any) => {
   const statusCode = error.statusCode || 500;
 
   res.status(statusCode).send(message);
-})
-
+});
 
 server.listen(process.env.PORT, () =>
   console.log(`Server live at PORT:${process.env.PORT}`)
