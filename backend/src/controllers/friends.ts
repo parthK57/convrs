@@ -19,7 +19,7 @@ export const addFriendHandler = async (req: any, res: any, next: any) => {
 
   // @ts-expect-error -> CHECK WHETHER THE FRIEND USER EXIST
   db.execute(
-    "SELECT username, email FROM users WHERE username = ? AND email = ?;",
+    "SELECT id FROM users WHERE username = ? AND email = ?;",
     [friendUsername, friendEmail],
     (err: Error, results: any) => {
       if (err) return next(new ErrorHandler(err.message, 500));
@@ -27,29 +27,45 @@ export const addFriendHandler = async (req: any, res: any, next: any) => {
         if (results.length == 0)
           return next(new ErrorHandler("User not found!", 400));
         else {
+          // TODO: Verify the friendship
+          const user2 = results[0].id as string;
           // @ts-expect-error -> CHECK WHETHER THEY ARE ALREADY FRIENDS
           db.execute(
-            "SELECT id FROM friends WHERE friendUsername = ? AND friendEmail = ? AND email = ?;",
-            [friendUsername, friendEmail, email],
+            "SELECT id FROM users WHERE username = ? AND email = ?;",
+            [username, email],
             (err: Error, results: any) => {
               if (err) return next(new ErrorHandler(err.message, 500));
-              else if (results.length != 0)
-                return next(new ErrorHandler("User already added!", 400));
               else {
-                // @ts-expect-error -> ADD FRIEND
+                if (results.length == 0)
+                  return next(new ErrorHandler("User not found!", 404));
+                const user1 = results[0].id as string;
+                // @ts-expect-error
                 db.execute(
-                  "INSERT INTO friends (email, username, friendEmail, friendUsername, room, timestamp) VALUES (?,?,?,?,?,?);",
-                  [
-                    email,
-                    username,
-                    friendEmail,
-                    friendUsername,
-                    UUID,
-                    timestamp,
-                  ],
+                  "SELECT id FROM friends WHERE user1 = ? AND user2 = ? OR user1 = ? AND user2 = ?;",
+                  [user1, user2, user2, user1],
                   (err: Error, results: any) => {
                     if (err) return next(new ErrorHandler(err.message, 500));
-                    else res.status(200).send("OK");
+                    else {
+                      if (results.length > 0)
+                        return next(
+                          new ErrorHandler(
+                            "User has already been added as friend!",
+                            400
+                          )
+                        );
+                      // @ts-expect-error -> INSERT INTO FRIENDS TABLE
+                      db.execute(
+                        "INSERT INTO friends (user1, user2, room, timestamp) VALUES (?,?,?,?);",
+                        [user1, user2, UUID, timestamp],
+                        (err: Error, results: any) => {
+                          if (err)
+                            return next(new ErrorHandler(err.message, 500));
+                          else {
+                            res.status(201).send("OK!");
+                          }
+                        }
+                      );
+                    }
                   }
                 );
               }
@@ -63,16 +79,32 @@ export const addFriendHandler = async (req: any, res: any, next: any) => {
 
 export const removeFriendHandler = async (req: any, res: any, next: any) => {
   const header = req.headers;
-  const email = header.email as string;
-  const friendEmail = header.friendemail as string;
-
-  // @ts-expect-error
+  const username = header.username as string;
+  const friendUsername = header.friendusername as string;
+  console.log(username, friendUsername);
+  // @ts-expect-error -> GETING THE IDS TO DELETE FROM THE FRIENDS TABLE
   db.execute(
-    "DELETE FROM friends WHERE email = ? AND friendEmail = ? OR email = ? AND friendEmail = ?;",
-    [email, friendEmail, friendEmail, email],
+    "SELECT id, username FROM users WHERE username = ? OR username = ?;",
+    [username, friendUsername],
     (err: Error, results: any) => {
       if (err) return next(new ErrorHandler(err.message, 500));
-      else res.status(200).send("OK!");
+      else {
+        if (results.length == 0)
+          return next(new ErrorHandler("Invalid data!", 400));
+        const id1 = results[0].id;
+        const id2 = results[1].id;
+        // @ts-expect-error
+        db.execute(
+          "DELETE FROM friends WHERE user1 = ? AND user2 = ? OR user1 = ? AND user2 = ?;",
+          [id1, id2, id2, id1],
+          (err: Error, results: any) => {
+            if (err) return next(new ErrorHandler(err.message, 500));
+            else {
+              res.status(200).json({ result: "Success" });
+            }
+          }
+        );
+      }
     }
   );
 };
@@ -82,21 +114,28 @@ export const getFriendsHandler = async (req: any, res: any, next: any) => {
 
   // @ts-expect-error -> GET FRIENDS FROM TABLE WHERE USER HAS ADDED THE FRIEND
   db.execute(
-    "SELECT friendUsername, room FROM friends WHERE email = ?;",
+    "SELECT id FROM users WHERE email = ?;",
     [email],
     (err: Error, results: any) => {
       if (err) return next(new ErrorHandler(err.message, 500));
       else {
-        const friendList = results;
-        // @ts-expect-error -> GET FRIENDS FROM TABLE WHERE USER WAS ADDED AS FRIEND
+        if (results.length == 0)
+          return next(
+            new ErrorHandler("No user found with provided email!", 404)
+          );
+        const id = results[0].id;
+        // @ts-expect-error -> ACTUALLY GET FRIENDS
         db.execute(
-          "SELECT username, room FROM friends WHERE friendEmail = ?;",
-          [email],
+          `SELECT username FROM users INNER JOIN friends ON users.id = friends.user1 OR users.id = friends.user2 
+          WHERE friends.user2 = ? AND users.id != ? OR 
+          friends.user1 = ? AND users.id != ?;`,
+          [id, id, id, id],
           (err: Error, results: any) => {
             if (err) return next(new ErrorHandler(err.message, 500));
             else {
-              friendList.push(...results);
-              res.status(200).json(friendList);
+              if (results.length == 0)
+                return next(new ErrorHandler("You have no friends!", 400));
+              res.status(200).json(results);
             }
           }
         );

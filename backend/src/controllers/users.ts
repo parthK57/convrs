@@ -2,6 +2,7 @@ import connectionPool from "../database/db";
 import { Decrypter, Encrypter } from "../Services/Bcrypt";
 import { loginBody, signUpBody } from "../models/users";
 import ErrorHandler from "../Services/ErrorHandler";
+import TimeStamp from "../Services/TimeStamp";
 
 const db = connectionPool;
 
@@ -13,11 +14,12 @@ export const signUpHandler = async (req: any, res: any, next: any) => {
 
   // Password Encryption
   const hashedPassword = await Encrypter(password);
+  const timestamp = TimeStamp();
 
   // @ts-expect-error
   db.execute(
-    "INSERT INTO users (username, email, password) VALUES (?,?,?)",
-    [username, email, hashedPassword],
+    "INSERT INTO users (username, email, password, timestamp) VALUES (?,?,?,?)",
+    [username, email, hashedPassword, timestamp],
     (err: Error, results: any) => {
       if (err) return next(new ErrorHandler(err.message, 500));
       else res.status(201).send("ID created!");

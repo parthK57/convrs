@@ -41,7 +41,8 @@ export const getMessagesHandler = async (req: any, res: any, next: any) => {
 
   // @ts-expect-error
   db.execute(
-    "SELECT room FROM friends WHERE room = ?;",[room],
+    "SELECT room FROM friends WHERE room = ?;",
+    [room],
     (err: Error, results: any) => {
       if (err) return next(new ErrorHandler(err.message, 500));
       else if (results.length == 0)

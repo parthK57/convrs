@@ -1,5 +1,5 @@
 export interface addFriendBody {
-    username: string;
-    friendUsername: string;
-    friendEmail: string;
+  username: string;
+  friendUsername: string;
+  friendEmail: string;
 }

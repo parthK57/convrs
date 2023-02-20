@@ -1,0 +1,3 @@
+//      UPDATE users SET groupMember = CASE WHEN (email = "khamitkarvaibhav@gmail.com" OR email = "test.user@gmail.com")
+//      THEN "Test Group" END
+//      WHERE (email = "khamitkarvaibhav@gmail.com" OR email = "test.user@gmail.com");
