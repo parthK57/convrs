@@ -112,7 +112,7 @@ export const removeFriendHandler = async (req: any, res: any, next: any) => {
 export const getFriendsHandler = async (req: any, res: any, next: any) => {
   const email = req.headers.email as string;
 
-  // @ts-expect-error -> GET FRIENDS FROM TABLE WHERE USER HAS ADDED THE FRIEND
+  // @ts-expect-error -> GETTING ID OF THE USER INORDER TO USE THAT ID TO QUERY FRIENDS
   db.execute(
     "SELECT id FROM users WHERE email = ?;",
     [email],
