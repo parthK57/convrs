@@ -82,7 +82,9 @@ export const joinGroupHandler = async (req: any, res: any, next: any) => {
       if (err) return next(new ErrorHandler(err.message, 500));
       else {
         if (results.length == 0)
-          return next(new ErrorHandler(`Invalid group_name:${groupname}!`, 400));
+          return next(
+            new ErrorHandler(`Invalid group_name:${groupname}!`, 400)
+          );
         const groupId = results[0].id;
         details.forEach((value, index) => {
           // @ts-expect-error -> GET THE USER ID
@@ -93,7 +95,9 @@ export const joinGroupHandler = async (req: any, res: any, next: any) => {
               if (err) return next(new ErrorHandler(err.message, 500));
               else {
                 if (results.length == 0)
-                  return next(new ErrorHandler(`Invalid email: ${value.email}!`, 500));
+                  return next(
+                    new ErrorHandler(`Invalid email: ${value.email}!`, 500)
+                  );
                 const userId = results[0].id;
                 // @ts-expect-error -> INSERT INTO THE GROUP MEMBERS TABLE
                 db.execute(
@@ -102,7 +106,7 @@ export const joinGroupHandler = async (req: any, res: any, next: any) => {
                   (err: Error, results: any) => {
                     if (err) return next(new ErrorHandler(err.message, 500));
                     else {
-                      if (index == (details.length - 1))
+                      if (index == details.length - 1)
                         res.status(200).json({ result: "Success" });
                     }
                   }
@@ -121,13 +125,26 @@ export const getGroupsHandler = async (req: any, res: any, next: any) => {
 
   // @ts-expect-error
   db.execute(
-    "SELECT groupMember FROM users WHERE email = ?;",
+    "SELECT id FROM users WHERE email = ?;",
     [email],
     (err: Error, results: any) => {
       if (err) return next(new ErrorHandler(err.message, 500));
-      else if (results[0].groupMember == null || undefined)
-        return res.status(200).send(results);
-      else res.status(200).send(results[0].groupMember.split(","));
+      else {
+        if (results.length == 0)
+          return next(new ErrorHandler(`Invalid email: ${email}!`, 400));
+        const userId = results[0].id;
+        // @ts-expect-error
+        db.execute(
+          "SELECT DISTINCT `groups`.`groupname` FROM `groups` INNER JOIN group_members WHERE group_members.member = ?;",
+          [userId],
+          (err: Error, results: any) => {
+            if (err) return next(new ErrorHandler(err.message, 500));
+            else if (results[0].groupMember == null || undefined)
+              return res.status(200).send(results);
+            else res.status(200).send(results);
+          }
+        );
+      }
     }
   );
 };
