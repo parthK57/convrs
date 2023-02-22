@@ -7,28 +7,31 @@ const db = connectionPool;
 
 export const sendMessageHandler = async (req: any, res: any, next: any) => {
   const body: sendMessageBody = req.body;
-  const username = body.username;
+  const email = req.headers.email;
   const room = body.room;
   const message = body.message;
 
   const timestamp = TimeStamp();
 
-  // @ts-expect-error
+  // @ts-expect-error -> GETTING USER ID
   db.execute(
-    "SELECT room FROM friends WHERE room = ?;",
-    [room],
+    "SELECT id FROM users WHERE email = ?;",
+    [email],
     (err: Error, results: any) => {
       if (err) return next(new ErrorHandler(err.message, 500));
-      else if (results.length == 0)
-        return next(new ErrorHandler("Bad request!", 400));
       else {
+        if (results.length == 0)
+          return next(new ErrorHandler(`Invalid email:${email}`, 400));
+        const userId = results[0].id;
         // @ts-expect-error
         db.execute(
-          "INSERT INTO messages (username, room, message, timestamp) VALUES (?,?,?,?);",
-          [username, room, message, timestamp],
+          "INSERT INTO messages (user, message, room, timestamp) VALUES (?, ?, ?, ?);",
+          [userId, message, room, timestamp],
           (err: Error, results: any) => {
             if (err) return next(new ErrorHandler(err.message, 500));
-            else res.status(200).send("OK!");
+            else {
+              res.status(200).json({ result: "Success" });
+            }
           }
         );
       }
@@ -41,23 +44,12 @@ export const getMessagesHandler = async (req: any, res: any, next: any) => {
 
   // @ts-expect-error
   db.execute(
-    "SELECT room FROM friends WHERE room = ?;",
+    `SELECT users.username, messages.message FROM users INNER JOIN messages 
+     ON users.id = messages.user WHERE messages.room = ?;`,
     [room],
     (err: Error, results: any) => {
       if (err) return next(new ErrorHandler(err.message, 500));
-      else if (results.length == 0)
-        return next(new ErrorHandler("Bad request!", 400));
-      else {
-        // @ts-expect-error
-        db.execute(
-          "SELECT username, message, timestamp FROM messages WHERE room = ?;",
-          [room],
-          (err: Error, results: any) => {
-            if (err) return next(new ErrorHandler(err.message, 500));
-            else res.status(200).json(results);
-          }
-        );
-      }
+      res.status(200).json(results);
     }
   );
 };

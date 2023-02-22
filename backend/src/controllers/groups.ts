@@ -1,13 +1,8 @@
 import ErrorHandler from "../Services/ErrorHandler";
-import { AcceptNull, KickNull } from "../Services/Groups";
 import TimeStamp from "../Services/TimeStamp";
 import UUIDGenerator from "../Services/UUIDGenerator";
 import connectionPool from "../database/db";
-import {
-  detailsArray,
-  selectDetails,
-  selectDetailsArray,
-} from "../models/groups";
+import { detailsArray } from "../models/groups";
 
 const db = connectionPool;
 
@@ -135,7 +130,7 @@ export const getGroupsHandler = async (req: any, res: any, next: any) => {
         const userId = results[0].id;
         // @ts-expect-error
         db.execute(
-          "SELECT DISTINCT `groups`.`groupname`, `groups`.`room` FROM `groups` INNER JOIN group_members WHERE group_members.member = ?;",
+          "SELECT DISTINCT `groups`.`groupname`, `groups`.`room` FROM `groups` INNER JOIN group_members ON groups.id = group_members.`group` WHERE group_members.member = ?;",
           [userId],
           (err: Error, results: any) => {
             if (err) return next(new ErrorHandler(err.message, 500));

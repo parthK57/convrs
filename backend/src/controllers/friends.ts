@@ -126,9 +126,10 @@ export const getFriendsHandler = async (req: any, res: any, next: any) => {
         const id = results[0].id;
         // @ts-expect-error -> ACTUALLY GET FRIENDS
         db.execute(
-          `SELECT username FROM users INNER JOIN friends ON users.id = friends.user1 OR users.id = friends.user2 
-          WHERE friends.user2 = ? AND users.id != ? OR 
-          friends.user1 = ? AND users.id != ?;`,
+          `SELECT DISTINCT username, room FROM users INNER JOIN friends 
+          ON users.id = friends.user1 OR users.id = friends.user2 
+          WHERE friends.user1 = ? AND users.id != ? 
+          OR friends.user2 = ? AND users.id != ?;`,
           [id, id, id, id],
           (err: Error, results: any) => {
             if (err) return next(new ErrorHandler(err.message, 500));
