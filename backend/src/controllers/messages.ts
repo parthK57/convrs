@@ -45,7 +45,7 @@ export const getMessagesHandler = async (req: any, res: any, next: any) => {
   // @ts-expect-error
   db.execute(
     `SELECT users.username, messages.message FROM users INNER JOIN messages 
-     ON users.id = messages.user WHERE messages.room = ?;`,
+     ON users.id = messages.user WHERE messages.room = ? ORDER BY messages.id;`,
     [room],
     (err: Error, results: any) => {
       if (err) return next(new ErrorHandler(err.message, 500));

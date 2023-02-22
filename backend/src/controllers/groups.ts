@@ -194,3 +194,34 @@ export const sendGroupMessageHandler = async (
     }
   );
 };
+
+export const getGroupMessageHandler = async (req: any, res: any, next: any) => {
+  const room = req.headers.room;
+
+  // @ts-expect-error
+  db.execute(
+    "SELECT id FROM `groups` WHERE room = ?;",
+    [room],
+    (err: Error, results: any) => {
+      if (err) return next(new ErrorHandler(err.message, 500));
+      else {
+        if (results.length == 0)
+          return next(new ErrorHandler(`Invalid room:${room}`, 400));
+        const groupId = results[0].id;
+        // @ts-expect-error
+        db.execute(
+          `SELECT users.username, group_messages.message FROM users INNER JOIN group_messages 
+           ON users.id = group_messages.user 
+           WHERE group_messages.group = ? ORDER BY group_messages.id;`,
+          [groupId],
+          (err: Error, results: any) => {
+            if (err) return next(new ErrorHandler(err.message, 500));
+            else {
+              res.status(200).json(results);
+            }
+          }
+        );
+      }
+    }
+  );
+};
