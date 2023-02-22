@@ -19,7 +19,7 @@ export const createGroupHandler = async (req: any, res: any, next: any) => {
   const timestamp = TimeStamp();
   const room = UUIDGenerator();
 
-  // @ts-expect-error -> INSERT INTO GROUPS TABLE
+  // @ts-expect-error -> GET ADMIN ID
   db.execute(
     "SELECT id FROM users WHERE email = ?;",
     [email],
@@ -28,14 +28,39 @@ export const createGroupHandler = async (req: any, res: any, next: any) => {
       else {
         if (results.length == 0)
           return next(new ErrorHandler("Invalid user details!", 400));
-        // @ts-expect-error
+        const adminId = results[0].id;
+        // @ts-expect-error -> INSERT INTO GROUPS TABLE
         db.execute(
           "INSERT INTO `groups` (groupname, room, admin, timestamp) VALUES (?, ?, ?, ?);",
-          [groupname, room, results[0].id, timestamp],
+          [groupname, room, adminId, timestamp],
           (err: Error, results: any) => {
             if (err) return next(new ErrorHandler(err.message, 500));
             else {
-              res.status(201).json({ result: "Success" });
+              // @ts-expect-error -> GET GROUP ID
+              db.execute(
+                "SELECT id FROM `groups` WHERE groupname = ? AND room = ?;",
+                [groupname, room],
+                (err: Error, results: any) => {
+                  if (err) return next(new ErrorHandler(err.message, 500));
+                  else {
+                    if (results.length == 0)
+                      return next(new ErrorHandler("Server Error!", 500));
+                    const groupId = results[0].id;
+                    // @ts-expect-error -> INSERT INTO GROUP MEMBERS TABLE
+                    db.execute(
+                      "INSERT INTO group_members (member, `group`) VALUES (?, ?);",
+                      [adminId, groupId],
+                      (err: Error, results: any) => {
+                        if (err)
+                          return next(new ErrorHandler(err.message, 500));
+                        else {
+                          res.status(201).json({ result: "Success" });
+                        }
+                      }
+                    );
+                  }
+                }
+              );
             }
           }
         );
@@ -46,46 +71,46 @@ export const createGroupHandler = async (req: any, res: any, next: any) => {
 
 export const joinGroupHandler = async (req: any, res: any, next: any) => {
   const body = req.body;
-  const email = req.header.email as string;
   const details: detailsArray = body.details;
   const groupname = body.group as string;
 
-  const addCount = details.length;
-  const emailsArray = details.map((value) => {
-    return value.email;
-  });
-  let SELECT_SQL_Repeat = "email = ? OR ";
-  let SELECT_SQL_Statement = `SELECT groupMember, email FROM users WHERE ${SELECT_SQL_Repeat.repeat(
-    addCount - 1
-  ).concat("email = ?;")}`;
-  //@ts-expect-error
+  // @ts-expect-error -> GET THE GROUP ID
   db.execute(
-    SELECT_SQL_Statement,
-    [...emailsArray],
-    async (err: Error, results: selectDetailsArray) => {
+    "SELECT id FROM `groups` WHERE groupname = ?;",
+    [groupname],
+    (err: Error, results: any) => {
       if (err) return next(new ErrorHandler(err.message, 500));
       else {
-        const NonNullGroup = await KickNull(results, groupname);
-        const NullGroup = await AcceptNull(results);
-
-        // TODO: Replace If statements with a promise and you are done!
-
-        if ((await NullGroup.length) != 0) {
-          // @ts-expect-error
-          db.execute();
-        }
-        if ((await NonNullGroup.length) != null) {
-          NonNullGroup.forEach((value: selectDetails) => {
-            // @ts-expect-error
-            db.execute(
-              "UPDATE users SET groupMembers = ? WHERE email = ?;",
-              [value.groupMember, value.email],
-              (err: Error, results: any) => {
-                if (err) return next(new ErrorHandler(err.message, 500));
+        if (results.length == 0)
+          return next(new ErrorHandler(`Invalid group_name:${groupname}!`, 400));
+        const groupId = results[0].id;
+        details.forEach((value, index) => {
+          // @ts-expect-error -> GET THE USER ID
+          db.execute(
+            "SELECT id FROM users WHERE email = ?;",
+            [value.email],
+            (err: Error, results: any) => {
+              if (err) return next(new ErrorHandler(err.message, 500));
+              else {
+                if (results.length == 0)
+                  return next(new ErrorHandler(`Invalid email: ${value.email}!`, 500));
+                const userId = results[0].id;
+                // @ts-expect-error -> INSERT INTO THE GROUP MEMBERS TABLE
+                db.execute(
+                  "INSERT INTO group_members (member, `group`) VALUES (?, ?);",
+                  [userId, groupId],
+                  (err: Error, results: any) => {
+                    if (err) return next(new ErrorHandler(err.message, 500));
+                    else {
+                      if (index == (details.length - 1))
+                        res.status(200).json({ result: "Success" });
+                    }
+                  }
+                );
               }
-            );
-          });
-        }
+            }
+          );
+        });
       }
     }
   );

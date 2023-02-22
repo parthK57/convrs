@@ -1,5 +1,4 @@
 export interface details{
-    username: string;
     email: string;
 }
 
