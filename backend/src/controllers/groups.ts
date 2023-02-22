@@ -135,7 +135,7 @@ export const getGroupsHandler = async (req: any, res: any, next: any) => {
         const userId = results[0].id;
         // @ts-expect-error
         db.execute(
-          "SELECT DISTINCT `groups`.`groupname` FROM `groups` INNER JOIN group_members WHERE group_members.member = ?;",
+          "SELECT DISTINCT `groups`.`groupname`, `groups`.`room` FROM `groups` INNER JOIN group_members WHERE group_members.member = ?;",
           [userId],
           (err: Error, results: any) => {
             if (err) return next(new ErrorHandler(err.message, 500));
@@ -154,21 +154,47 @@ export const sendGroupMessageHandler = async (
   res: any,
   next: any
 ) => {
+  const email = req.headers.email as string;
   const body = req.body;
-  const username = body.username;
-  const message = body.message;
-  const room = body.room;
+  const message = body.message as string;
+  const room = body.room as string;
 
   const timestamp = TimeStamp();
 
-  // @ts-expect-error
+  // @ts-expect-error -> GET USER ID
   db.execute(
-    "INSERT INTO messages (username, room, message, timestamp) VALUES (?, ?, ?, ?);",
-    [username, room, message, timestamp],
+    "SELECT id FROM users WHERE email = ?;",
+    [email],
     (err: Error, results: any) => {
       if (err) return next(new ErrorHandler(err.message, 500));
       else {
-        res.status(200).send("OK!");
+        if (results.length == 0)
+          return next(new ErrorHandler(`Invalid email: ${email}`, 400));
+        const userId = results[0].id;
+        // @ts-expect-error -> GET GROUP ID
+        db.execute(
+          "SELECT id FROM `groups` WHERE room = ?;",
+          [room],
+          (err: Error, results: any) => {
+            if (err) return next(new ErrorHandler(err.message, 500));
+            else {
+              if (results.length == 0)
+                return next(new ErrorHandler(`Invalid room: ${room}`, 400));
+              const groupId = results[0].id;
+              // @ts-expect-error -> INSERT INTO GROUP MESSAGES TABLE
+              db.execute(
+                "INSERT INTO group_messages (user, `group`, timestamp, message) VALUES (?, ?, ?, ?);",
+                [userId, groupId, timestamp, message],
+                (err: Error, results: any) => {
+                  if (err) return next(new ErrorHandler(err.message, 500));
+                  else {
+                    res.status(200).json({ result: "Success" });
+                  }
+                }
+              );
+            }
+          }
+        );
       }
     }
   );
