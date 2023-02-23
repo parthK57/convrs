@@ -7,7 +7,7 @@ const Navbar = () => {
 
   return (
     <>
-      <div className="flex justify-between items-center px-10 h-[60px] bg-slate-200 shadow-md">
+      <div className="flex justify-between text-[#F5F7DC] items-center px-10 h-[60px] bg-[#0F0326] shadow-md">
         <div className="text-3xl">convrs</div>
         <ul className="hidden md:flex gap-10">
           <li className="cursor-pointer">Login</li>

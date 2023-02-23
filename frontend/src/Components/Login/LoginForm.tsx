@@ -13,8 +13,8 @@ const LoginForm = () => {
                 <input type="password" name="password" className="px-2 py-1"/>
             </div>
             <div className="flex justify-between items-center">
-                <button type="submit" className="btn px-3 py-1 bg-[#0373fc] hover:bg-[#2587ff] text-white rounded-lg">Login</button>
-                <p>Forgot password?</p>
+                <button type="submit" className="btn px-3 py-1 bg-[#2f0b72] hover:bg-[#57319d] text-white text-[18px] rounded-lg">Login</button>
+                <p className="pointer-events-auto cursor-pointer">Forgot password?</p>
             </div>
         </form>
     </>)
