@@ -1,23 +1,30 @@
+import { useState } from "react";
+import { RxHamburgerMenu } from "react-icons/rx";
+import DropMenu from "../Login/DropMenu";
+
 const Navbar = () => {
+  const [hamburger, sethamburger] = useState(true);
+
   return (
     <>
-      <nav className="flex justify-between items-center bg-[#242325] text-slate-00 h-[70px] shadow-sm">
-        <div className="px-5 text-white py-1 text-3xl">convrs</div>
-        <ul className="hidden lg:flex px-5 justify-between lg:w-[45%] xl:w-[32%] xxl:w-[25%] rounded">
-          <li className="text-xl bg-[#3581B8] px-4 py-1 rounded-xl cursor-pointer hover:bg-[#FFE0B2]">
-            Login
-          </li> 
-          <li className="text-xl bg-[#3581B8] px-4 py-1 rounded-xl cursor-pointer hover:bg-[#FFE0B2]">
-            Sign Up
-          </li>
-          <li className="text-xl bg-[#3581B8] px-4 py-1 rounded-xl cursor-pointer hover:bg-[#FFE0B2]">
-            About
-          </li>
-          <li className="text-xl bg-[#3581B8] px-4 py-1 rounded-xl cursor-pointer hover:bg-[#FFE0B2]">
-            Contact
-          </li>
+      <div className="flex justify-between items-center px-10 h-[60px] bg-slate-200 shadow-md">
+        <div className="text-3xl">convrs</div>
+        <ul className="hidden md:flex gap-10">
+          <li className="cursor-pointer">Login</li>
+          <li className="cursor-pointer">Sign Up</li>
+          <li className="cursor-pointer">About Us</li>
         </ul>
-      </nav>
+        <div className="md:hidden">
+          {hamburger ? (
+            <RxHamburgerMenu
+              onClick={() => sethamburger(!hamburger)}
+              className="w-6 h-6"
+            />
+          ) : (
+            <DropMenu />
+          )}
+        </div>
+      </div>
     </>
   );
 };
