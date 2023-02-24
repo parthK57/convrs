@@ -5,6 +5,7 @@ import ChatHead from "./ChatHead";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { groupObj } from "../Modals/Groups";
+import GroupChatHead from "./GroupChatHead";
 
 const HomeLeftBar = () => {
   const [friendsData, setFriendsData] = useState(Array<friendsObj>);
@@ -59,11 +60,11 @@ const HomeLeftBar = () => {
             : friendsData.map((val: friendsObj) => {
                 return <ChatHead username={val.username} room={val.room} />;
               })}
-          {/* {groupsData == null
+          {groupsData == null
             ? null
             : groupsData.map((val: groupObj) => {
-                return <ChatHead username={val.groupname} room={val.room}/>;
-              })} */}
+                return <GroupChatHead groupname={val.groupname} room={val.room}/>;
+              })}
         </div>
       </div>
     </>
