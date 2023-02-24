@@ -12,6 +12,7 @@ const NavbarHome = () => {
     e.preventDefault();
     localStorage.removeItem("email");
     localStorage.removeItem("password");
+    localStorage.removeItem("username");
     navigate("/");
   };
 
@@ -21,8 +22,8 @@ const NavbarHome = () => {
         <div className="text-3xl">convrs</div>
         <ul className="hidden md:flex items-center gap-10">
           <li className="cursor-pointer">{`Hello, ${localStorage.getItem(
-            "email"
-          )}!`}</li>
+            "username"
+          )?.split(" ")[0]}!`}</li>
           <li className="cursor-pointer">
             <button
               onClick={logoutUser}

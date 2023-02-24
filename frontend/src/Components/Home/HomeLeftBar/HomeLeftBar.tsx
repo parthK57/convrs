@@ -63,7 +63,9 @@ const HomeLeftBar = () => {
           {groupsData == null
             ? null
             : groupsData.map((val: groupObj) => {
-                return <GroupChatHead groupname={val.groupname} room={val.room}/>;
+                return (
+                  <GroupChatHead groupname={val.groupname} room={val.room} />
+                );
               })}
         </div>
       </div>

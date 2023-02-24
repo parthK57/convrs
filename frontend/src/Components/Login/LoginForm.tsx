@@ -7,11 +7,18 @@ const LoginForm = () => {
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
 
+  interface axiosResponse {
+    status: number;
+    data: {
+      username: string;
+    };
+  }
+
   // @ts-expect-error
   const loginUser = async (event) => {
     event.preventDefault();
     try {
-      const { status } = await axios({
+      const { status, data }: axiosResponse = await axios({
         method: "post",
         url: "http://localhost:4000/users/login",
         headers: {
@@ -25,6 +32,8 @@ const LoginForm = () => {
       if (status === 200) {
         localStorage.setItem("email", email);
         localStorage.setItem("password", password);
+        localStorage.setItem("username", data.username);
+        console.log(data.username);
         navigate("/home");
       }
     } catch (error) {

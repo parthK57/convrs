@@ -34,7 +34,7 @@ export const loginHandler = async (req: any, res: any, next: any) => {
 
   // @ts-expect-error
   db.execute(
-    "SELECT password FROM users WHERE email = ?;",
+    "SELECT password, username FROM users WHERE email = ?;",
     [email],
     async (err: Error, results: any) => {
       if (err) return next(new ErrorHandler(err.message, 400));
@@ -42,7 +42,8 @@ export const loginHandler = async (req: any, res: any, next: any) => {
         if (results.length == 0)
           return next(new ErrorHandler("User not found!", 404));
         const verifiedStatus = await Decrypter(password, results[0].password);
-        if (verifiedStatus) return res.status(200).send("OK!");
+        if (verifiedStatus)
+          return res.status(200).json({ username: results[0].username });
         else res.status(401).send("Invalid password!");
       }
     }
