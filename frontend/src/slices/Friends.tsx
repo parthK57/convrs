@@ -9,10 +9,10 @@ export const friendsSlice = createSlice({
     },
   },
   reducers: {
-    populate: (state, action) => {
+    populateFriends: (state, action) => {
       state.value = action.payload;
     },
-    clear: (state) => {
+    clearFriends: (state) => {
       state = {
         value: {
           username: "",
@@ -23,4 +23,4 @@ export const friendsSlice = createSlice({
   },
 });
 
-export const {populate, clear} = friendsSlice.actions;
+export const {populateFriends, clearFriends} = friendsSlice.actions;
