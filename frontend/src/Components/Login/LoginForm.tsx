@@ -1,22 +1,35 @@
 import axios from "axios";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const LoginForm = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const navigate = useNavigate();
+  useEffect(() => {
+    sessionStorage.setItem("convrs-test-key", "11223344");
+  }, []);
 
-  const loginUser = async (e: Event) => {
-    e.preventDefault();
+  // @ts-expect-error
+  const loginUser = async (event) => {
+    event.preventDefault();
     try {
-      const response = await axios.post("http://localhost:4000/users/login", {
+      const { status } = await axios({
+        method: "post",
+        url: "http://localhost:4000/users/login",
         headers: {
-          "convrs-test-key": "11223344",
-          "Content-Type": "application/json",
+          "convrs-test-key": sessionStorage.getItem("convrs-test-key"),
         },
-        email: email,
-        password: password,
+        data: {
+          email: email,
+          password: password,
+        },
       });
-      console.log(response);
+      if (status === 200) {
+        localStorage.setItem("email", email);
+        localStorage.setItem("password", password);
+        navigate("/home");
+      }
     } catch (error) {
       console.log(error);
     }
@@ -24,16 +37,12 @@ const LoginForm = () => {
 
   return (
     <>
-      <form
-        onSubmit={(event) => event.preventDefault()}
-        autoComplete="off"
-        className="bg-slate-100 p-8 rounded-[25px] shadow-sm flex flex-col w-[350px]"
-      >
+      <div className="bg-slate-100 p-8 rounded-[25px] shadow-sm flex flex-col w-[350px]">
         <div className="text-3xl text-center mb-8 border-b border-black pb-2">
           Login
         </div>
         <div className="flex flex-col gap-2">
-          <label htmlFor="email">Email:</label>
+          <label>Email:</label>
           <input
             type="text"
             className="px-2 py-1"
@@ -41,10 +50,9 @@ const LoginForm = () => {
           />
         </div>
         <div className="flex flex-col gap-2 mb-8">
-          <label htmlFor="password">Password:</label>
+          <label>Password:</label>
           <input
             type="password"
-            name="password"
             className="px-2 py-1"
             onChange={(e) => setPassword(e.target.value)}
           />
@@ -53,13 +61,14 @@ const LoginForm = () => {
           <button
             type="submit"
             className="btn px-3 py-1 bg-[#2f0b72] hover:bg-[#57319d] text-white text-[18px] rounded-lg"
-            onClick={() => loginUser}
+            id="rand"
+            onClick={loginUser}
           >
             Login
           </button>
           <p className="pointer-events-auto cursor-pointer">Forgot password?</p>
         </div>
-      </form>
+      </div>
     </>
   );
 };

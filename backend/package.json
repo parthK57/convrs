@@ -6,7 +6,8 @@
   "scripts": {
     "start:ts": "tsc -w",
     "start:js": "cd dist && nodemon server.js",
-    "dev": "concurrently npm:start:*"
+    "dev": "concurrently npm:start:*",
+    "prod": "cd dist && node server.js"
   },
   "keywords": [
     "chat-app"
