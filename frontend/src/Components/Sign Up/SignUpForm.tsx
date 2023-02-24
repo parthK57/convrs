@@ -1,27 +1,35 @@
 import axios from "axios";
 import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 
 const SignUpForm = () => {
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const navigate = useNavigate();
 
-  const signUpUser = (e: Event) => {
+  // @ts-expect-error
+  const signUpUser = async (e) => {
     e.preventDefault();
 
     if (password === confirmPassword) {
       try {
-        const response = axios.post("http://localhost:4000/users/signup", {
+        const { status } = await axios({
+          method: "post",
+          url: "http://localhost:4000/users/signup",
           headers: {
-            "convrs-test-key": "11223344",
-            "Content-Type": "application/json",
+            "convrs-test-key": sessionStorage.getItem("convrs-test-key"),
           },
-          email: email,
-          username: username,
-          password: confirmPassword,
+          data: {
+            email: email,
+            username: username,
+            password: confirmPassword,
+          },
         });
-        console.log(response);
+        if (status === 201) {
+          navigate("/");
+        }
       } catch (error) {
         console.log(error);
       }
@@ -33,7 +41,6 @@ const SignUpForm = () => {
   return (
     <>
       <form
-        onSubmit={(event) => event.preventDefault()}
         autoComplete="off"
         className="bg-slate-100 p-8 rounded-[25px] shadow-sm flex flex-col w-[350px]"
       >
@@ -43,7 +50,7 @@ const SignUpForm = () => {
         <div className="flex flex-col gap-2">
           <label htmlFor="email">Email:</label>
           <input
-            type="text"
+            type="email"
             className="px-2 py-1"
             onChange={(e) => setEmail(e.target.value)}
           />
@@ -57,19 +64,17 @@ const SignUpForm = () => {
           />
         </div>
         <div className="flex flex-col gap-2">
-          <label htmlFor="password">Password:</label>
+          <label>Password:</label>
           <input
             type="password"
-            name="password"
             className="px-2 py-1"
             onChange={(e) => setPassword(e.target.value)}
           />
         </div>
         <div className="flex flex-col gap-2 mb-8">
-          <label htmlFor="password">Retype Password:</label>
+          <label>Retype Password:</label>
           <input
             type="password"
-            name="password"
             className="px-2 py-1"
             onChange={(e) => setConfirmPassword(e.target.value)}
           />
@@ -78,11 +83,13 @@ const SignUpForm = () => {
           <button
             type="submit"
             className="btn px-3 py-1 bg-[#2f0b72] hover:bg-[#57319d] text-white text-[18px] rounded-lg"
-            onClick={() => signUpUser}
+            onClick={signUpUser}
           >
             Sign Up
           </button>
-          <p className="pointer-events-auto cursor-pointer text-md">Cancel</p>
+          <p className="pointer-events-auto cursor-pointer text-md">
+            <Link to="/">Cancel</Link>{" "}
+          </p>
         </div>
       </form>
     </>

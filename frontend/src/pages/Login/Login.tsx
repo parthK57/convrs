@@ -1,7 +1,12 @@
+import { useEffect } from "react";
 import LoginForm from "../../Components/Login/LoginForm";
 import Navbar from "../../Components/Navbar/Navbar";
 
 const Login = () => {
+  useEffect(() => {
+    sessionStorage.setItem("convrs-test-key", "11223344");
+  }, []);
+
   return (
     <>
       <Navbar />

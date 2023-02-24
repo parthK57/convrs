@@ -1,7 +1,11 @@
+import { useEffect } from "react";
 import Navbar from "../../Components/Navbar/Navbar";
 import SignUpForm from "../../Components/Sign Up/SignUpForm";
 
 const SignUp = () => {
+  useEffect(() => {
+    sessionStorage.setItem("convrs-test-key", "11223344");
+  }, []);
 
   return (
     <>

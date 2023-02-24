@@ -1,14 +1,11 @@
 import axios from "axios";
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 
 const LoginForm = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
-  useEffect(() => {
-    sessionStorage.setItem("convrs-test-key", "11223344");
-  }, []);
 
   // @ts-expect-error
   const loginUser = async (event) => {
@@ -61,12 +58,13 @@ const LoginForm = () => {
           <button
             type="submit"
             className="btn px-3 py-1 bg-[#2f0b72] hover:bg-[#57319d] text-white text-[18px] rounded-lg"
-            id="rand"
             onClick={loginUser}
           >
             Login
           </button>
-          <p className="pointer-events-auto cursor-pointer">Forgot password?</p>
+          <p className="pointer-events-auto cursor-pointer">
+            <Link to="/password/recovery">Forgot password?</Link>
+          </p>
         </div>
       </div>
     </>
