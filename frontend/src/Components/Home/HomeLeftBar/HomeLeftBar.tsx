@@ -57,13 +57,13 @@ const HomeLeftBar = () => {
           {friendsData == null
             ? null
             : friendsData.map((val: friendsObj) => {
-                return <ChatHead username={val.username} room={val.room}/>;
+                return <ChatHead username={val.username} room={val.room} />;
               })}
-          {groupsData == null
+          {/* {groupsData == null
             ? null
             : groupsData.map((val: groupObj) => {
                 return <ChatHead username={val.groupname} room={val.room}/>;
-              })}
+              })} */}
         </div>
       </div>
     </>

@@ -23,4 +23,4 @@ export const friendsSlice = createSlice({
   },
 });
 
-export const {populateFriends, clearFriends} = friendsSlice.actions;
+export const { populateFriends, clearFriends } = friendsSlice.actions;

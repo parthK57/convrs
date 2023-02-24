@@ -11,10 +11,10 @@ export const messagesSlice = createSlice({
     ],
   },
   reducers: {
-    populate: (state, action) => {
+    populateMessages: (state, action) => {
       state.value = action.payload;
     },
-    clear: (state) => {
+    clearMessages: (state) => {
       state = {
         value: [
           {
@@ -27,4 +27,4 @@ export const messagesSlice = createSlice({
   },
 });
 
-export const { populate, clear } = messagesSlice.actions;
+export const { populateMessages, clearMessages } = messagesSlice.actions;
