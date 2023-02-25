@@ -2,11 +2,13 @@ import { useState } from "react";
 import ClientChat from "./ClientChat";
 import UserChat from "./UserChat";
 import axios from "axios";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { activeChatDetails, messages, messagesArray } from "../Modals/Chatbox";
+import { populateMessages } from "../../../slices/Messages";
 
 const Chatbox = () => {
   const USERNAME = localStorage.getItem("username") as string;
+  const distpatch = useDispatch();
   const [message, setMessage] = useState("");
   const messages: messagesArray = useSelector(
     (state: any) => state.messages.value
@@ -19,6 +21,8 @@ const Chatbox = () => {
   );
 
   const sendMessage = async () => {
+    const inputTag = document.querySelector("input") as HTMLInputElement;
+    inputTag.value = "";
     try {
       const { status } = await axios({
         method: "post",
@@ -34,38 +38,54 @@ const Chatbox = () => {
           room: activeChatDetails.room,
         },
       });
-      if (status === 200) {
-        const messageContainer = document.querySelector(
-          "#messages-container"
-        ) as HTMLDivElement;
-        
-        // ELEMENT CREATION
-        const wrapper = document.createElement("div");
-        const shell = document.createElement("div");
-        const pTag1 = document.createElement("p");
-        const pTag2 = document.createElement("p");
-        
-        pTag1.className = "bg-[#f4f7d7] border-b border-[#dff801]";
-        pTag1.innerText = "You";
-        pTag2.className = "message";
-        pTag2.innerText = `${message}`;
-        shell.className = "px-2 py-1 text-black rounded-md max-w-[250px] bg-[#F5F7DC]";
-        wrapper.className = "w-full flex justify-end items-center py-1";
-
-        // LEXICOGRAPGIC ADDITION OF ELEMENTS
-        messageContainer.appendChild(wrapper);
-        wrapper.appendChild(shell);
-        shell.appendChild(pTag1);
-        shell.appendChild(pTag2)
-      }
+      if(status === 200){
+        const { data } = await axios({
+          method: "get",
+          url: "http://localhost:4000/messages/get",
+          headers: {
+            "convrs-test-key": sessionStorage.getItem("convrs-test-key"),
+            email: localStorage.getItem("email"),
+            password: localStorage.getItem("password"),
+            room: activeChatDetails.room,
+          },
+        });
+        distpatch(populateMessages(data));
+      }        
     } catch (error) {
       console.log(error);
     }
   };
 
   const sendGroupMessage = async () => {
+    const inputTag = document.querySelector("input") as HTMLInputElement;
+    inputTag.value = "";
     try {
-      const { status } = await axios.post("");
+      const { status } = await axios({
+        method: "post",
+        url: "http://localhost:4000/groups/messages/send",
+        headers: {
+          "convrs-test-key": "11223344",
+          email: localStorage.getItem("email"),
+          password: localStorage.getItem("password"),
+        },
+        data: {
+          room: activeChatDetails.room,
+          message: message,
+        },
+      });
+      if(status == 200){
+        const { data } = await axios({
+          method: "get",
+          url: "http://localhost:4000/groups/messages/get",
+          headers: {
+            "convrs-test-key": sessionStorage.getItem("convrs-test-key"),
+            email: localStorage.getItem("email"),
+            password: localStorage.getItem("password"),
+            room: activeChatDetails.room,
+          },
+        });
+        distpatch(populateMessages(data));
+      }
     } catch (error) {
       console.log(error);
     }
