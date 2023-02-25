@@ -32,14 +32,17 @@ io.on("connection", (socket: any) => {
   // **JOIN A ROOM - GET DATA FROM FRONTEND CODE ===> socket.emit("join-room", {room:room});
   socket.on("join-room", (data: any) => {
     socket.join(data.room);
-    socket.emit("response", `Roger that!Joining room: ${data.room}`);
+    // socket.emit("response", `Roger that!Joining room: ${data.room}`);
+    io.sockets.in(data.room).emit("response", data);
   });
-
-  socket.on("private-message", (data: any) => {
-    // **this is how you send a private message IO.(SOCKETS).IN(ROOM).EMIT("NAME OF THE EVENT"), DATA<MESSAGE>); REF:https://www.tutorialspoint.com/socket.io/socket.io_rooms.htm
-    io.sockets.in(data.room).emit("receive-message", data);
-  });
+  socket.on("private-message", (data: any)=>{
+    const json = [data];
+    io.sockets.in(data.room).emit("receive-message", json);
+  })
 });
+
+
+
 
 // Routes
 import userRouter from "./routes/users";

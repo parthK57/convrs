@@ -33,6 +33,7 @@ const LoginForm = () => {
         localStorage.setItem("email", email);
         localStorage.setItem("password", password);
         localStorage.setItem("username", data.username);
+        localStorage.setItem("convrs-test-key", "11223344");
         console.log(data.username);
         navigate("/home");
       }

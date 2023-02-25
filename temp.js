@@ -4,16 +4,24 @@
 //   repeatCount - 1
 // ).concat("email = ?;")}`;
 
-function funa() {
-  let a = 1;
-  let b = 2;
-  this.returnA = a;
-}
+// function funa() {
+//   let a = 1;
+//   let b = 2;
+//   this.returnA = a;
+// }
 
-try {
-  let sm = new funa();
-  console.log(sm.a);
-  console.log(b);
-} catch (error) {
-  console.log(error.message);
+// try {
+//   let sm = new funa();
+//   console.log(sm.a);
+//   console.log(b);
+// } catch (error) {
+//   console.log(error.message);
+// }
+
+const obj = {
+  username: "A",
+  message: "ms"
 }
+const as = 
+
+console.log(typeof as);

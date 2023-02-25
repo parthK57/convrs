@@ -1,8 +1,11 @@
-import { useDispatch } from "react-redux";
-import { populateActiveChat } from "../../../slices/ActiveChat";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  populateActiveChat,
+} from "../../../slices/ActiveChat";
 import axios from "axios";
-import { populateMessages } from "../../../slices/Messages";
+import { clearMessages, populateMessages } from "../../../slices/Messages";
 import { setGroupChatMode } from "../../../slices/GroupChatMode";
+import { clearNewMessages, populateNewMessages } from "../../../slices/NewMessages";
 
 interface ChatHeadPropsDtype {
   username: string;
@@ -11,15 +14,16 @@ interface ChatHeadPropsDtype {
 
 const ChatHead = ({ username, room }: ChatHeadPropsDtype) => {
   const distpatch = useDispatch();
-
   // SETTING ACTIVE CHAT DETAILS
   async function getMessages() {
+    distpatch(populateNewMessages([]));
+    distpatch(clearMessages());
     try {
       const { data } = await axios({
         method: "get",
         url: "http://localhost:4000/messages/get",
         headers: {
-          "convrs-test-key": sessionStorage.getItem("convrs-test-key"),
+          "convrs-test-key": localStorage.getItem("convrs-test-key"),
           email: localStorage.getItem("email"),
           password: localStorage.getItem("password"),
           room: room,

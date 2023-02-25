@@ -6,11 +6,15 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { groupObj } from "../Modals/Groups";
 import GroupChatHead from "./GroupChatHead";
+import { io } from "socket.io-client";
 
+export const socket = io("http://localhost:4000");
 const HomeLeftBar = () => {
   const [friendsData, setFriendsData] = useState(Array<friendsObj>);
   const [groupsData, setGroupsData] = useState(Array<groupObj>);
-  
+  useEffect(()=>{
+    socket.on("response", (data) => console.log(data));
+  },[socket])
   // GETTING FRIENDS DATA
   async function getData() {
     const { data } = await axios({
@@ -58,11 +62,13 @@ const HomeLeftBar = () => {
           {friendsData == null
             ? null
             : friendsData.map((val: friendsObj) => {
+                socket.emit("join-room", ({ room: val.room }));
                 return <ChatHead username={val.username} room={val.room} />;
               })}
           {groupsData == null
             ? null
             : groupsData.map((val: groupObj) => {
+                socket.emit("join-room", ({ room: val.room }));
                 return (
                   <GroupChatHead groupname={val.groupname} room={val.room} />
                 );

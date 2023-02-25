@@ -8,4 +8,12 @@ export interface messages {
   message: string;
 }
 
+export interface socketIoMessage {
+    username: string;
+    room: string;
+    message: string;
+}
+
+
+
 export type messagesArray = Array<messages>;

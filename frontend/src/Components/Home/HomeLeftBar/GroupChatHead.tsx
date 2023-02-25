@@ -3,8 +3,9 @@ import axios from "axios";
 // REDUX TOOLKIT
 import { useDispatch } from "react-redux";
 import { populateActiveChat } from "../../../slices/ActiveChat";
-import { populateMessages } from "../../../slices/Messages";
+import { clearMessages, populateMessages } from "../../../slices/Messages";
 import { setGroupChatMode } from "../../../slices/GroupChatMode";
+import { clearNewMessages, populateNewMessages } from "../../../slices/NewMessages";
 
 interface GroupChatHeadPropsDtype {
   groupname: string;
@@ -13,15 +14,16 @@ interface GroupChatHeadPropsDtype {
 
 const GroupChatHead = ({ groupname, room }: GroupChatHeadPropsDtype) => {
   const distpatch = useDispatch();
-
   // SETTING ACTIVE CHAT DETAILS
   async function getMessages() {
+    distpatch(populateNewMessages([]));
+    distpatch(clearMessages());
     try {
       const { data } = await axios({
         method: "get",
         url: "http://localhost:4000/groups/messages/get",
         headers: {
-          "convrs-test-key": sessionStorage.getItem("convrs-test-key"),
+          "convrs-test-key": localStorage.getItem("convrs-test-key"),
           email: localStorage.getItem("email"),
           password: localStorage.getItem("password"),
           room: room,
@@ -29,7 +31,7 @@ const GroupChatHead = ({ groupname, room }: GroupChatHeadPropsDtype) => {
       });
       distpatch(populateMessages(data));
       distpatch(populateActiveChat({ chatTitle: groupname, room: room }));
-      distpatch(setGroupChatMode({isActive: true}));
+      distpatch(setGroupChatMode({ isActive: true }));
     } catch (error) {
       console.log(error);
     }

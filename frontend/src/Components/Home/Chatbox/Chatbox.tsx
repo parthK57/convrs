@@ -1,24 +1,32 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import ClientChat from "./ClientChat";
 import UserChat from "./UserChat";
 import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
-import { activeChatDetails, messages, messagesArray } from "../Modals/Chatbox";
+import { activeChatDetails, messages, messagesArray, socketIoMessage } from "../Modals/Chatbox";
 import { populateMessages } from "../../../slices/Messages";
+import { socket } from "../HomeLeftBar/HomeLeftBar";
+import { populateNewMessages } from "../../../slices/NewMessages";
+
 
 const Chatbox = () => {
   const USERNAME = localStorage.getItem("username") as string;
   const distpatch = useDispatch();
   const [message, setMessage] = useState("");
-  const messages: messagesArray = useSelector(
-    (state: any) => state.messages.value
-  );
+  const messages: messagesArray = useSelector((state: any) => state.messages.value);
   const groupChatState = useSelector(
     (state: any) => state.groupChatMode.value.isActive
   );
   const activeChatDetails: activeChatDetails = useSelector(
     (state: any) => state.activeChat.value
   );
+  const newMessages = useSelector((state:any) => state.newMessages.value);
+  useEffect(() => {
+    socket.on("receive-message", (data: Array<socketIoMessage>) => {
+    distpatch(populateNewMessages(data));
+    // console.log(data);
+    });
+  }, [socket]);
 
   const sendMessage = async () => {
     const inputTag = document.querySelector("input") as HTMLInputElement;
@@ -38,7 +46,7 @@ const Chatbox = () => {
           room: activeChatDetails.room,
         },
       });
-      if(status === 200){
+      if (status === 200) {
         const { data } = await axios({
           method: "get",
           url: "http://localhost:4000/messages/get",
@@ -50,7 +58,12 @@ const Chatbox = () => {
           },
         });
         distpatch(populateMessages(data));
-      }        
+        socket.emit("private-message", {
+          username: USERNAME,
+          room: activeChatDetails.room,
+          message: message,
+        });
+      }
     } catch (error) {
       console.log(error);
     }
@@ -73,7 +86,7 @@ const Chatbox = () => {
           message: message,
         },
       });
-      if(status == 200){
+      if (status == 200) {
         const { data } = await axios({
           method: "get",
           url: "http://localhost:4000/groups/messages/get",
@@ -85,6 +98,11 @@ const Chatbox = () => {
           },
         });
         distpatch(populateMessages(data));
+        socket.emit("private-message", {
+          username: USERNAME,
+          room: activeChatDetails.room,
+          message: message,
+        });
       }
     } catch (error) {
       console.log(error);
@@ -114,6 +132,16 @@ const Chatbox = () => {
                     />
                   );
               })}
+          {
+            newMessages.length == 0 || newMessages[0].username == ""
+            ? null
+            : newMessages.map((value: socketIoMessage) => {
+              if(value.username === USERNAME)
+               return null;
+              else
+                return <ClientChat message={value.message} username={value.username} />
+            })
+          }
         </div>
         <div className="flex flex-col h-[80px] px-2 py-2 items-center justify-center border-t border-zinc-400">
           <div className="bg-zinc-100 w-full px-5 py-2 flex justify-between gap-4 rounded-full">
