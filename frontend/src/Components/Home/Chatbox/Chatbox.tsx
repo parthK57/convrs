@@ -3,22 +3,69 @@ import ClientChat from "./ClientChat";
 import UserChat from "./UserChat";
 import axios from "axios";
 import { useSelector } from "react-redux";
-import { activeChatDetails } from "../Modals/Chatbox";
+import { activeChatDetails, messages, messagesArray } from "../Modals/Chatbox";
 
 const Chatbox = () => {
-  const USERNAME = localStorage.getItem("username");
+  const USERNAME = localStorage.getItem("username") as string;
   const [message, setMessage] = useState("");
-  const messages: any = useSelector((state: any) => state.messages.value);
+  const messages: messagesArray = useSelector(
+    (state: any) => state.messages.value
+  );
+  const groupChatState = useSelector(
+    (state: any) => state.groupChatMode.value.isActive
+  );
   const activeChatDetails: activeChatDetails = useSelector(
     (state: any) => state.activeChat.value
   );
-  console.log("ActiveChat", activeChatDetails);
-  console.log("MessageDetails", messages);
 
-  const sendMessage = () => {
+  const sendMessage = async () => {
     try {
-      const response = axios.post("");
-      console.log(response);
+      const { status } = await axios({
+        method: "post",
+        url: "http://localhost:4000/messages/send",
+        headers: {
+          "convrs-test-key": "11223344",
+          email: localStorage.getItem("email"),
+          password: localStorage.getItem("password"),
+        },
+        data: {
+          username: USERNAME,
+          message: message,
+          room: activeChatDetails.room,
+        },
+      });
+      if (status === 200) {
+        const messageContainer = document.querySelector(
+          "#messages-container"
+        ) as HTMLDivElement;
+        
+        // ELEMENT CREATION
+        const wrapper = document.createElement("div");
+        const shell = document.createElement("div");
+        const pTag1 = document.createElement("p");
+        const pTag2 = document.createElement("p");
+        
+        pTag1.className = "bg-[#f4f7d7] border-b border-[#dff801]";
+        pTag1.innerText = "You";
+        pTag2.className = "message";
+        pTag2.innerText = `${message}`;
+        shell.className = "px-2 py-1 text-black rounded-md max-w-[250px] bg-[#F5F7DC]";
+        wrapper.className = "w-full flex justify-end items-center py-1";
+
+        // LEXICOGRAPGIC ADDITION OF ELEMENTS
+        messageContainer.appendChild(wrapper);
+        wrapper.appendChild(shell);
+        shell.appendChild(pTag1);
+        shell.appendChild(pTag2)
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const sendGroupMessage = async () => {
+    try {
+      const { status } = await axios.post("");
     } catch (error) {
       console.log(error);
     }
@@ -36,10 +83,16 @@ const Chatbox = () => {
         >
           {messages.length == 0 || messages[0].username == ""
             ? null
-            : messages.map((value: any) => {
+            : messages.map((value: messages) => {
                 if (value.username === USERNAME)
-                  return <UserChat message={value.message} />;
-                else return <ClientChat message={value.message} />;
+                  return <UserChat message={value.message} username="You" />;
+                else
+                  return (
+                    <ClientChat
+                      message={value.message}
+                      username={value.username}
+                    />
+                  );
               })}
         </div>
         <div className="flex flex-col h-[80px] px-2 py-2 items-center justify-center border-t border-zinc-400">
@@ -52,7 +105,7 @@ const Chatbox = () => {
             <button
               type="submit"
               className="btn px-3 py-1 bg-[#311B92] text-white hover:bg-[#512DA8] rounded-md"
-              onClick={sendMessage}
+              onClick={groupChatState ? sendGroupMessage : sendMessage}
             >
               Send
             </button>

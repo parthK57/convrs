@@ -2,6 +2,7 @@ import { useDispatch } from "react-redux";
 import { populateActiveChat } from "../../../slices/ActiveChat";
 import axios from "axios";
 import { populateMessages } from "../../../slices/Messages";
+import { setGroupChatMode } from "../../../slices/GroupChatMode";
 
 interface ChatHeadPropsDtype {
   username: string;
@@ -26,6 +27,7 @@ const ChatHead = ({ username, room }: ChatHeadPropsDtype) => {
       });
       distpatch(populateMessages(data));
       distpatch(populateActiveChat({ chatTitle: username, room: room }));
+      distpatch(setGroupChatMode({ isActive: false }));
     } catch (error) {
       console.log(error);
     }
@@ -33,7 +35,10 @@ const ChatHead = ({ username, room }: ChatHeadPropsDtype) => {
 
   return (
     <>
-      <div onClick={getMessages} className="pointer-events-auto cursor-pointer flex h-16 px-2 py-5 items-center border-b border-zinc-300 hover:bg-white transition ease-in-out">
+      <div
+        onClick={getMessages}
+        className="pointer-events-auto cursor-pointer flex h-16 px-2 py-5 items-center border-b border-zinc-300 hover:bg-white transition ease-in-out"
+      >
         <span>{username}</span>
       </div>
     </>

@@ -1,7 +1,10 @@
+import axios from "axios";
+
+// REDUX TOOLKIT
 import { useDispatch } from "react-redux";
 import { populateActiveChat } from "../../../slices/ActiveChat";
-import axios from "axios";
 import { populateMessages } from "../../../slices/Messages";
+import { setGroupChatMode } from "../../../slices/GroupChatMode";
 
 interface GroupChatHeadPropsDtype {
   groupname: string;
@@ -26,6 +29,7 @@ const GroupChatHead = ({ groupname, room }: GroupChatHeadPropsDtype) => {
       });
       distpatch(populateMessages(data));
       distpatch(populateActiveChat({ chatTitle: groupname, room: room }));
+      distpatch(setGroupChatMode({isActive: true}));
     } catch (error) {
       console.log(error);
     }

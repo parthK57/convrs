@@ -10,7 +10,7 @@ import GroupChatHead from "./GroupChatHead";
 const HomeLeftBar = () => {
   const [friendsData, setFriendsData] = useState(Array<friendsObj>);
   const [groupsData, setGroupsData] = useState(Array<groupObj>);
-
+  
   // GETTING FRIENDS DATA
   async function getData() {
     const { data } = await axios({
