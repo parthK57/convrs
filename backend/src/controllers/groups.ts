@@ -66,50 +66,88 @@ export const createGroupHandler = async (req: any, res: any, next: any) => {
 
 export const joinGroupHandler = async (req: any, res: any, next: any) => {
   const body = req.body;
+  const email = req.headers.email as string;
   const details: detailsArray = body.details;
   const groupname = body.group as string;
 
-  // @ts-expect-error -> GET THE GROUP ID
+  // @ts-expect-error -> VERIFY USER
   db.execute(
-    "SELECT id FROM `groups` WHERE groupname = ?;",
-    [groupname],
+    "SELECT id FROM users WHERE email = ?;",
+    [email],
     (err: Error, results: any) => {
       if (err) return next(new ErrorHandler(err.message, 500));
       else {
-        if (results.length == 0)
-          return next(
-            new ErrorHandler(`Invalid group_name:${groupname}!`, 400)
-          );
-        const groupId = results[0].id;
-        details.forEach((value, index) => {
-          // @ts-expect-error -> GET THE USER ID
-          db.execute(
-            "SELECT id FROM users WHERE email = ?;",
-            [value.email],
-            (err: Error, results: any) => {
-              if (err) return next(new ErrorHandler(err.message, 500));
-              else {
-                if (results.length == 0)
-                  return next(
-                    new ErrorHandler(`Invalid email: ${value.email}!`, 500)
-                  );
-                const userId = results[0].id;
-                // @ts-expect-error -> INSERT INTO THE GROUP MEMBERS TABLE
+        const id = results[0].id;
+        // @ts-expect-error -> GET THE GROUP ID
+        db.execute(
+          "SELECT id, admin FROM `groups` WHERE groupname = ?;",
+          [groupname],
+          (err: Error, results: any) => {
+            if (err) return next(new ErrorHandler(err.message, 500));
+            else {
+              if (results.length == 0)
+                return next(
+                  new ErrorHandler(`Invalid group name: '${groupname}'`, 400)
+                );
+              const groupAdmin = results[0].admin;
+              if (id != groupAdmin)
+                return next(
+                  new ErrorHandler("Only admins can add group members!", 401)
+                );
+              const groupId = results[0].id;
+              details.forEach((value, index) => {
+                // @ts-expect-error -> GET THE USER ID
                 db.execute(
-                  "INSERT INTO group_members (member, `group`) VALUES (?, ?);",
-                  [userId, groupId],
+                  "SELECT id FROM users WHERE email = ?;",
+                  [value.email],
                   (err: Error, results: any) => {
                     if (err) return next(new ErrorHandler(err.message, 500));
                     else {
-                      if (index == details.length - 1)
-                        res.status(200).json({ result: "Success" });
+                      if (results.length == 0)
+                        return next(
+                          new ErrorHandler(
+                            `Invalid email: ${value.email}!`,
+                            500
+                          )
+                        );
+                      const userId = results[0].id;
+                      // @ts-expect-error -> CHECK WHETHER THE USER IS ALREADY A MEMBER OF THE GROUP
+                      db.execute(
+                        "SELECT id FROM group_members WHERE member = ? AND `group` = ?;",
+                        [userId, groupId],
+                        (err: Error, results: any) => {
+                          if (err)
+                            return next(new ErrorHandler(err.message, 500));
+                          else {
+                            if (results.length != 0)
+                              return next(
+                                new ErrorHandler("Cannot add user twice!", 400)
+                              );
+                            // @ts-expect-error -> INSERT INTO THE GROUP MEMBERS TABLE
+                            db.execute(
+                              "INSERT INTO group_members (member, `group`) VALUES (?, ?);",
+                              [userId, groupId],
+                              (err: Error, results: any) => {
+                                if (err)
+                                  return next(
+                                    new ErrorHandler(err.message, 500)
+                                  );
+                                else {
+                                  if (index == details.length - 1)
+                                    res.status(200).json({ result: "Success" });
+                                }
+                              }
+                            );
+                          }
+                        }
+                      );
                     }
                   }
                 );
-              }
+              });
             }
-          );
-        });
+          }
+        );
       }
     }
   );
@@ -228,37 +266,57 @@ export const getGroupMessageHandler = async (req: any, res: any, next: any) => {
 
 export const removeMemberHandler = async (req: any, res: any, next: any) => {
   const header = req.headers;
+  const email = header.email as string;
   const kick = header.kick as string; // Username of the person who's getting kicked
-  const room = header.room as string;
+  const groupname = header.groupname as string;
 
   // @ts-expect-error
   db.execute(
-    "SELECT id FROM `groups` WHERE room = ?;",
-    [room],
+    "SELECT id, admin FROM `groups` WHERE groupname = ?;",
+    [groupname],
     (err: any, results: any) => {
       if (err) return next(new ErrorHandler(err.message, 500));
       else {
         if (results.length == 0)
-          return next(new ErrorHandler(`Invalid room:${room}`, 400));
+          return next(new ErrorHandler(`Invalid room:${groupname}`, 400));
         const groupId = results[0].id;
-        // @ts-expect-error
+        const groupAdmin = results[0].admin;
+        // @ts-expect-error -> VERIFY THE USER WHETHER HE/SHE IS ADMIN
         db.execute(
-          "SELECT id FROM users WHERE username = ?;",
-          [kick],
+          "SELECT id FROM users WHERE email = ?;",
+          [email],
           (err: Error, results: any) => {
             if (err) return next(new ErrorHandler(err.message, 500));
             else {
-              if (results.length == 0)
-                return next(new ErrorHandler(`Invalid kick:${kick}`, 400));
-              const userKickId = results[0].id;
-              // @ts-expect-error
+              const userId = results[0].id;
+              if (userId != groupAdmin)
+                return next(
+                  new ErrorHandler("Only admins can kick members!", 401)
+                );
+              // @ts-expect-error -> GET THE KICK ID
               db.execute(
-                "DELETE FROM group_members WHERE `group` = ? AND member = ?;",
-                [groupId, userKickId],
+                "SELECT id FROM users WHERE username = ?;",
+                [kick],
                 (err: Error, results: any) => {
                   if (err) return next(new ErrorHandler(err.message, 500));
                   else {
-                    res.status(200).json({ result: "Success" });
+                    if (results.length == 0)
+                      return next(
+                        new ErrorHandler(`Invalid kick:${kick}`, 400)
+                      );
+                    const userKickId = results[0].id;
+                    // @ts-expect-error -> EXECUTE THE KICK
+                    db.execute(
+                      "DELETE FROM group_members WHERE `group` = ? AND member = ?;",
+                      [groupId, userKickId],
+                      (err: Error, results: any) => {
+                        if (err)
+                          return next(new ErrorHandler(err.message, 500));
+                        else {
+                          res.status(200).json({ result: "Success" });
+                        }
+                      }
+                    );
                   }
                 }
               );

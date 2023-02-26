@@ -27,9 +27,8 @@ export const addFriendHandler = async (req: any, res: any, next: any) => {
         if (results.length == 0)
           return next(new ErrorHandler("User not found!", 400));
         else {
-          // TODO: Verify the friendship
           const user2 = results[0].id as string;
-          // @ts-expect-error -> CHECK WHETHER THEY ARE ALREADY FRIENDS
+          // @ts-expect-error -> GET THE USER's ID (FRIEND REQUEST SENDER)
           db.execute(
             "SELECT id FROM users WHERE username = ? AND email = ?;",
             [username, email],
@@ -39,7 +38,7 @@ export const addFriendHandler = async (req: any, res: any, next: any) => {
                 if (results.length == 0)
                   return next(new ErrorHandler("User not found!", 404));
                 const user1 = results[0].id as string;
-                // @ts-expect-error
+                // @ts-expect-error -> CHECK WHETHER THEY ARE ALREADY FRIENDS
                 db.execute(
                   "SELECT id FROM friends WHERE user1 = ? AND user2 = ? OR user1 = ? AND user2 = ?;",
                   [user1, user2, user2, user1],
@@ -61,7 +60,7 @@ export const addFriendHandler = async (req: any, res: any, next: any) => {
                           if (err)
                             return next(new ErrorHandler(err.message, 500));
                           else {
-                            res.status(201).send("OK!");
+                            res.status(201).json({ result: "Success" });
                           }
                         }
                       );
@@ -81,7 +80,7 @@ export const removeFriendHandler = async (req: any, res: any, next: any) => {
   const header = req.headers;
   const username = header.username as string;
   const friendUsername = header.friendusername as string;
-  console.log(username, friendUsername);
+
   // @ts-expect-error -> GETING THE IDS TO DELETE FROM THE FRIENDS TABLE
   db.execute(
     "SELECT id, username FROM users WHERE username = ? OR username = ?;",
@@ -89,8 +88,8 @@ export const removeFriendHandler = async (req: any, res: any, next: any) => {
     (err: Error, results: any) => {
       if (err) return next(new ErrorHandler(err.message, 500));
       else {
-        if (results.length == 0)
-          return next(new ErrorHandler("Invalid data!", 400));
+        if (results.length < 2)
+          return next(new ErrorHandler("Invalid user data!", 400));
         const id1 = results[0].id;
         const id2 = results[1].id;
         // @ts-expect-error

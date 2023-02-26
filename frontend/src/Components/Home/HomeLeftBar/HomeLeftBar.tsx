@@ -9,18 +9,38 @@ import { io } from "socket.io-client";
 import ChatsMenu from "./ChatsMenu";
 import { useDispatch, useSelector } from "react-redux";
 import { setChatMenu } from "../../../slices/ChatMenuState";
+import AddUserModal from "../Modals/AddUserModal";
+import RemoveUserModal from "../Modals/RemoveUserModal";
+import CreateGroupModal from "../Modals/CreateGroupModal";
+import AddMemberModal from "../Modals/AddMemberModal";
+import RemoveMemberMoal from "../Modals/RemoveMemberModal";
 
 export const socket = io("http://localhost:4000");
 const HomeLeftBar = () => {
   const [friendsData, setFriendsData] = useState(Array<friendsObj>);
   const [groupsData, setGroupsData] = useState(Array<groupObj>);
   const dispatch = useDispatch();
-  const chatMenuState: boolean = useSelector(
+
+  // CHAT MENU & MODAL TOGGLE STATES
+  const chatMenuState = useSelector(
     (state: any) => state.chatMenuState.value.isActive
-  );
-  // useEffect(() => {
-  //   socket.on("response", (data) => console.log(data));
-  // }, [socket]);
+  ) as boolean;
+  const addUserModalState = useSelector(
+    (state: any) => state.modalToggler.value.AddUserModal
+  ) as boolean;
+  const removeUserModalState = useSelector(
+    (state: any) => state.modalToggler.value.RemoveUserModal
+  ) as boolean;
+  const createGroupModalState = useSelector(
+    (state: any) => state.modalToggler.value.CreateGroupModal
+  ) as boolean;
+  const addMemberModalState = useSelector(
+    (state: any) => state.modalToggler.value.AddMemeberModal
+  ) as boolean;
+  const removeMemberModalState = useSelector(
+    (state: any) => state.modalToggler.value.RemoveMemberModal
+  ) as boolean;
+
   // GETTING FRIENDS DATA
   async function getData() {
     const { data } = await axios({
@@ -56,7 +76,7 @@ const HomeLeftBar = () => {
 
   return (
     <>
-      <div className="flex flex-col w-[20%] h-[90%] bg-zinc-50 shadow-md rounded-tl-[25px] rounded-bl-[25px]">
+      <div className="flex flex-col w-[20%] h-[90%] bg-zinc-50 shadow-md rounded-tl-[25px] rounded-bl-[25px] overflow-hidden">
         <div id="User Info Container" className="flex flex-col">
           <div className="flex relative justify-between items-center h-20 rounded-tl-[25px] p-3 text-3xl bg-zinc-100 border-b border-zinc-300">
             <span>Chats</span>
@@ -89,6 +109,11 @@ const HomeLeftBar = () => {
               })}
         </div>
       </div>
+      {addUserModalState ? <AddUserModal /> : null}
+      {removeUserModalState ? <RemoveUserModal /> : null}
+      {createGroupModalState ? <CreateGroupModal /> : null}
+      {addMemberModalState ? <AddMemberModal /> : null}
+      {removeMemberModalState ? <RemoveMemberMoal /> : null}
     </>
   );
 };

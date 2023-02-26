@@ -5,6 +5,7 @@ import { activeChatSlice } from "./slices/ActiveChat";
 import { groupChatModeSlice } from "./slices/GroupChatMode";
 import { newMessagesSlice } from "./slices/NewMessages";
 import { chatMenuStateSlice } from "./slices/ChatMenuState";
+import { modalTogglerSlice } from "./slices/ModalToggler";
 
 export const store = configureStore({
   reducer: {
@@ -14,5 +15,6 @@ export const store = configureStore({
     groupChatMode: groupChatModeSlice.reducer,
     newMessages: newMessagesSlice.reducer,
     chatMenuState: chatMenuStateSlice.reducer,
+    modalToggler: modalTogglerSlice.reducer,
   },
 });

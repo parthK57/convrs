@@ -44,7 +44,7 @@ const LoginForm = () => {
 
   return (
     <>
-      <div className="bg-slate-100 p-8 rounded-[25px] shadow-sm flex flex-col w-[350px]">
+      <form className="bg-slate-100 p-8 rounded-[25px] shadow-sm flex flex-col w-[350px]">
         <div className="text-3xl text-center mb-8 border-b border-black pb-2">
           Login
         </div>
@@ -76,7 +76,7 @@ const LoginForm = () => {
             <Link to="/password/recovery">Forgot password?</Link>
           </p>
         </div>
-      </div>
+      </form>
     </>
   );
 };
