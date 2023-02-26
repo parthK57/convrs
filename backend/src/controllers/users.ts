@@ -62,18 +62,20 @@ export const resetPasswordRequestHandler = async (
 ) => {
   const header = req.headers;
   const email = header.email as string;
-  const username = header.username as string;
 
   const UUID = UUIDGenerator();
   const timestamp = TimeStamp();
   // @ts-expect-error -> GET USER ID
   db.execute(
-    "SELECT id FROM users WHERE email = ?;",
+    "SELECT id, username FROM users WHERE email = ?;",
     [email],
     (err: Error, results: any) => {
       if (err) return next(new ErrorHandler(err.message, 500));
       else {
+        if (results.length == 0)
+          return next(new ErrorHandler("Invalid details!", 400));
         const userId = results[0].id;
+        const username = results[0].username;
         const msg = {
           to: email,
           from: "parth.dev5757@gmail.com",

@@ -5,6 +5,7 @@ import SignUp from "./pages/Sign Up/SignUp";
 import AboutUs from "./pages/About Us/AboutUs";
 import { Provider } from "react-redux";
 import { store } from "./store";
+import ForgotPassword from "./pages/Forgot Password/ForgotPassword";
 
 function App() {
 
@@ -16,6 +17,7 @@ function App() {
         <Route path="/home" element={<Home />}></Route>
         <Route path="/signup" element={<SignUp />}></Route>
         <Route path="/aboutus" element={<AboutUs />}></Route>
+        <Route path="/password/recovery" element={<ForgotPassword />}></Route>  
       </Routes>
       </Provider>
     </>

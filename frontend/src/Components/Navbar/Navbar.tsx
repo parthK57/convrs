@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { RxHamburgerMenu } from "react-icons/rx";
-import DropMenu from "../Login/DropMenu";
 import { Link } from "react-router-dom";
+import DropMenu from "../Login/DropMenu";
+import { RxHamburgerMenu } from "react-icons/rx";
 
 const Navbar = () => {
   const [hamburger, sethamburger] = useState(true);

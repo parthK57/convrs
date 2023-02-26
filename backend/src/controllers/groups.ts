@@ -172,8 +172,7 @@ export const getGroupsHandler = async (req: any, res: any, next: any) => {
           [userId],
           (err: Error, results: any) => {
             if (err) return next(new ErrorHandler(err.message, 500));
-            else if (results[0].groupMember == null || undefined)
-              return res.status(200).send(results);
+            else if (results.length == 0) return res.status(200).send(results);
             else res.status(200).send(results);
           }
         );

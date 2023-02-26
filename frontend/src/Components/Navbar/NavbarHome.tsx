@@ -1,11 +1,21 @@
 import { useState } from "react";
 import { RxHamburgerMenu } from "react-icons/rx";
 import DropMenuHome from "../Home/DropMenuHome";
+
+// REDUX TOOLKIT
 import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { clearActiveChat } from "../../slices/ActiveChat";
+import { setChatMenu } from "../../slices/ChatMenuState";
+import { clearFriends } from "../../slices/Friends";
+import { setGroupChatMode } from "../../slices/GroupChatMode";
+import { clearMessages } from "../../slices/Messages";
+import { clearNewMessages } from "../../slices/NewMessages";
 
 const NavbarHome = () => {
   const [hamburger, sethamburger] = useState(true);
   const navigate = useNavigate();
+  const distpatch = useDispatch();
 
   // @ts-expect-error
   const logoutUser = (e) => {
@@ -13,6 +23,12 @@ const NavbarHome = () => {
     localStorage.removeItem("email");
     localStorage.removeItem("password");
     localStorage.removeItem("username");
+    distpatch(clearActiveChat());
+    distpatch(setChatMenu(false));
+    distpatch(clearFriends());
+    distpatch(setGroupChatMode(false));
+    distpatch(clearMessages());
+    distpatch(clearNewMessages());
     navigate("/");
   };
 
