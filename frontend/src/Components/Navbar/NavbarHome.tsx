@@ -21,7 +21,7 @@ const NavbarHome = () => {
       <div className="flex justify-between items-center px-10 h-[60px] bg-[#0F0326] text-[#F5F7DC] shadow-md">
         <div className="text-3xl">convrs</div>
         <ul className="hidden md:flex items-center gap-10">
-          <li className="cursor-pointer">{`Hello, ${localStorage.getItem(
+          <li>{`Hello, ${localStorage.getItem(
             "username"
           )?.split(" ")[0]}!`}</li>
           <li className="cursor-pointer">

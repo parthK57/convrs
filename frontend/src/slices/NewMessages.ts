@@ -29,4 +29,5 @@ export const newMessagesSlice = createSlice({
   },
 });
 
-export const { populateNewMessages, clearNewMessages } = newMessagesSlice.actions;
+export const { populateNewMessages, clearNewMessages } =
+  newMessagesSlice.actions;

@@ -1,11 +1,12 @@
-import { useDispatch, useSelector } from "react-redux";
-import {
-  populateActiveChat,
-} from "../../../slices/ActiveChat";
+import { useDispatch } from "react-redux";
+import { populateActiveChat } from "../../../slices/ActiveChat";
 import axios from "axios";
 import { clearMessages, populateMessages } from "../../../slices/Messages";
 import { setGroupChatMode } from "../../../slices/GroupChatMode";
-import { clearNewMessages, populateNewMessages } from "../../../slices/NewMessages";
+import {
+  clearNewMessages,
+  populateNewMessages,
+} from "../../../slices/NewMessages";
 
 interface ChatHeadPropsDtype {
   username: string;

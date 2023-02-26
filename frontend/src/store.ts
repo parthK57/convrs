@@ -4,6 +4,7 @@ import { messagesSlice } from "./slices/Messages";
 import { activeChatSlice } from "./slices/ActiveChat";
 import { groupChatModeSlice } from "./slices/GroupChatMode";
 import { newMessagesSlice } from "./slices/NewMessages";
+import { chatMenuStateSlice } from "./slices/ChatMenuState";
 
 export const store = configureStore({
   reducer: {
@@ -12,5 +13,6 @@ export const store = configureStore({
     activeChat: activeChatSlice.reducer,
     groupChatMode: groupChatModeSlice.reducer,
     newMessages: newMessagesSlice.reducer,
+    chatMenuState: chatMenuStateSlice.reducer,
   },
 });

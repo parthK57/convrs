@@ -17,11 +17,3 @@
 // } catch (error) {
 //   console.log(error.message);
 // }
-
-const obj = {
-  username: "A",
-  message: "ms"
-}
-const as = 
-
-console.log(typeof as);

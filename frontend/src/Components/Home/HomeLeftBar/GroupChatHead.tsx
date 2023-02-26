@@ -5,7 +5,7 @@ import { useDispatch } from "react-redux";
 import { populateActiveChat } from "../../../slices/ActiveChat";
 import { clearMessages, populateMessages } from "../../../slices/Messages";
 import { setGroupChatMode } from "../../../slices/GroupChatMode";
-import { clearNewMessages, populateNewMessages } from "../../../slices/NewMessages";
+import { populateNewMessages } from "../../../slices/NewMessages";
 
 interface GroupChatHeadPropsDtype {
   groupname: string;
