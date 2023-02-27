@@ -1,6 +1,6 @@
 import connectionPool from "../database/db";
 import { Decrypter, Encrypter } from "../Services/Bcrypt";
-import { dbLoginResponse, loginBody, signUpBody } from "../models/users";
+import { loginBody, signUpBody } from "../models/users";
 import ErrorHandler from "../Services/ErrorHandler";
 import TimeStamp from "../Services/TimeStamp";
 import sgMail from "@sendgrid/mail";
