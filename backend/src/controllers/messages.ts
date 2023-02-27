@@ -13,43 +13,37 @@ export const sendMessageHandler = async (req: any, res: any, next: any) => {
 
   const timestamp = TimeStamp();
 
-  // @ts-expect-error -> GETTING USER ID
-  db.execute(
-    "SELECT id FROM users WHERE email = ?;",
-    [email],
-    (err: Error, results: any) => {
-      if (err) return next(new ErrorHandler(err.message, 500));
-      else {
-        if (results.length == 0)
-          return next(new ErrorHandler(`Invalid email:${email}`, 400));
-        const userId = results[0].id;
-        // @ts-expect-error
-        db.execute(
-          "INSERT INTO messages (user, message, room, timestamp) VALUES (?, ?, ?, ?);",
-          [userId, message, room, timestamp],
-          (err: Error, results: any) => {
-            if (err) return next(new ErrorHandler(err.message, 500));
-            else {
-              res.status(200).json({ result: "Success" });
-            }
-          }
-        );
-      }
-    }
-  );
+  try {
+    const [userData] = (await db.execute(
+      "SELECT id FROM users WHERE email = ?;",
+      [email]
+    )) as any;
+    if (userData.length == 0)
+      return next(new ErrorHandler(`Invalid email: ${email}`, 400));
+    const userId = userData[0].id;
+
+    // INSERT MSG INTO DB
+    await db.execute(
+      "INSERT INTO messages (user, message, room, timestamp) VALUES (?, ?, ?, ?);",
+      [userId, message, room, timestamp]
+    );
+    res.status(200).json({ result: "success" });
+  } catch (error: any) {
+    return next(new ErrorHandler(error.message, 500));
+  }
 };
 
 export const getMessagesHandler = async (req: any, res: any, next: any) => {
   const room = req.headers.room as string;
 
-  // @ts-expect-error
-  db.execute(
-    `SELECT users.username, messages.message FROM users INNER JOIN messages 
-     ON users.id = messages.user WHERE messages.room = ? ORDER BY messages.id;`,
-    [room],
-    (err: Error, results: any) => {
-      if (err) return next(new ErrorHandler(err.message, 500));
-      res.status(200).json(results);
-    }
-  );
+  try {
+    const [messages] = (await db.execute(
+      `SELECT users.username, messages.message FROM users INNER JOIN messages 
+        ON users.id = messages.user WHERE messages.room = ? ORDER BY messages.id;`,
+      [room]
+    )) as any;
+    res.status(200).json(messages);
+  } catch (error: any) {
+    return next(new ErrorHandler(error.message, 500));
+  }
 };
