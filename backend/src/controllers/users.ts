@@ -1,6 +1,6 @@
 import connectionPool from "../database/db";
 import { Decrypter, Encrypter } from "../Services/Bcrypt";
-import { loginBody, signUpBody } from "../models/users";
+import { dbLoginResponse, loginBody, signUpBody } from "../models/users";
 import ErrorHandler from "../Services/ErrorHandler";
 import TimeStamp from "../Services/TimeStamp";
 import sgMail from "@sendgrid/mail";
@@ -21,15 +21,15 @@ export const signUpHandler = async (req: any, res: any, next: any) => {
   const hashedPassword = await Encrypter(password);
   const timestamp = TimeStamp();
 
-  // @ts-expect-error
-  db.execute(
-    "INSERT INTO users (username, email, password, timestamp) VALUES (?,?,?,?)",
-    [username, email, hashedPassword, timestamp],
-    (err: Error, results: any) => {
-      if (err) return next(new ErrorHandler(err.message, 500));
-      else res.status(201).send("ID created!");
-    }
-  );
+  try {
+    await db.execute(
+      "INSERT INTO users (username, email, password, timestamp) VALUES (?,?,?,?)",
+      [username, email, hashedPassword, timestamp]
+    );
+    res.status(201).json({ result: "success" });
+  } catch (error: any) {
+    return next(new ErrorHandler(error.message, 500));
+  }
 };
 
 export const loginHandler = async (req: any, res: any, next: any) => {
@@ -37,22 +37,21 @@ export const loginHandler = async (req: any, res: any, next: any) => {
   const email = body.email;
   const password = body.password;
 
-  // @ts-expect-error
-  db.execute(
-    "SELECT password, username FROM users WHERE email = ?;",
-    [email],
-    async (err: Error, results: any) => {
-      if (err) return next(new ErrorHandler(err.message, 400));
-      else {
-        if (results.length == 0)
-          return next(new ErrorHandler("User not found!", 404));
-        const verifiedStatus = await Decrypter(password, results[0].password);
-        if (verifiedStatus)
-          return res.status(200).json({ username: results[0].username });
-        else res.status(401).send("Invalid password!");
-      }
-    }
-  );
+  try {
+    const [userData] = (await db.execute(
+      "SELECT password, username FROM users WHERE email = ?;",
+      [email]
+    )) as any;
+    if (userData.length == 0)
+      throw new ErrorHandler(`Invalid Email: ${email}`, 404);
+    const username = userData[0].username;
+    const verifiedStatus = await Decrypter(password, userData[0].password);
+    if (verifiedStatus) return res.status(200).json({ username });
+    else return res.status(401).send("Invalid password!");
+  } catch (error: any) {
+    if (error.statusCode) return next(error);
+    return next(new ErrorHandler(error.message, 500));
+  }
 };
 
 export const resetPasswordRequestHandler = async (
@@ -65,57 +64,44 @@ export const resetPasswordRequestHandler = async (
 
   const UUID = UUIDGenerator();
   const timestamp = TimeStamp();
-  // @ts-expect-error -> GET USER ID
-  db.execute(
-    "SELECT id, username FROM users WHERE email = ?;",
-    [email],
-    (err: Error, results: any) => {
-      if (err) return next(new ErrorHandler(err.message, 500));
-      else {
-        if (results.length == 0)
-          return next(new ErrorHandler("Invalid details!", 400));
-        const userId = results[0].id;
-        const username = results[0].username;
-        const msg = {
-          to: email,
-          from: "parth.dev5757@gmail.com",
-          subject: "Reset your password.",
-          html: `
+
+  try {
+    const [userData] = (await db.execute(
+      "SELECT id, username FROM users WHERE email = ?;",
+      [email]
+    )) as any;
+    // IF EMAIL IS INVALID
+    if (userData.length == 0)
+      return next(new ErrorHandler(`Invalid Email: ${email}`, 400));
+
+    const userId = userData[0].id;
+    const username = userData[0].username;
+    const msg = {
+      to: email,
+      from: `${process.env.SENDGRID_EMAIL}`,
+      subject: "Reset your password.",
+      html: `
               <h1>Hello ${username}!</h1>
               <h4>Click on the button to reset your password!</h4>
               <button id="reset-password"><a href="http://localhost:4000/users/reset/form?id=${userId}">Reset Password</a></button>
             `,
-        };
-
-        const sendEmail = async () => {
-          try {
-            const response = await sgMail.send(msg);
-            if (
-              response[0].statusCode == 200 ||
-              response[0].statusCode == 201 ||
-              response[0].statusCode == 202
-            ) {
-              // @ts-expect-error
-              db.execute(
-                "INSERT INTO password_recovery (`user`, uuid, `timestamp`, active) VALUES (?, ?, ?, ?);",
-                [userId, UUID, timestamp, 1],
-                (err: Error, results: any) => {
-                  if (err) return next(new ErrorHandler(err.message, 500));
-                  else {
-                    res.status(200).json({ request: "Approved!" });
-                  }
-                }
-              );
-            }
-          } catch (error: any) {
-            console.log(error);
-            return next(new ErrorHandler(error.message, 500));
-          }
-        };
-        sendEmail();
-      }
+    };
+    const response = await sgMail.send(msg);
+    if (
+      response[0].statusCode == 200 ||
+      response[0].statusCode == 201 ||
+      response[0].statusCode == 202
+    ) {
+      await db.execute(
+        "INSERT INTO password_recovery (`user`, uuid, `timestamp`, active) VALUES (?, ?, ?, ?);",
+        [userId, UUID, timestamp, 1]
+      );
+      return res.status(200).json({ request: "Approved!" });
     }
-  );
+  } catch (error: any) {
+    if (error.statusCode) return next(error);
+    return next(new ErrorHandler(error.message, 500));
+  }
 };
 
 export const resetPasswordFormHandler = async (
@@ -125,16 +111,16 @@ export const resetPasswordFormHandler = async (
 ) => {
   const userId = req.query.id as string;
 
-  // @ts-expect-error
-  db.execute(
-    "SELECT id FROM password_recovery WHERE `user` = ?;",
-    [userId],
-    (err: any, results: any) => {
-      if (err) return next(new ErrorHandler(err.message, 500));
-      else {
-        if (results.length == 0)
-          return next(new ErrorHandler("Session Expired!", 400));
-        res.send(`<html>
+  try {
+    const [userData] = (await db.execute(
+      "SELECT id FROM password_recovery WHERE `user` = ?;",
+      [userId]
+    )) as any;
+    // CHECK FOR PASSWORD RESET REQUEST ENTRY
+    if (userData.length == 0)
+      return next(new ErrorHandler("Session Expired!", 400));
+    else {
+      res.send(`<html>
                   <link
                   href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css"
                   rel="stylesheet"
@@ -188,10 +174,11 @@ export const resetPasswordFormHandler = async (
                   </form>
                   </div>
               </html>`);
-        res.end();
-      }
+      res.end();
     }
-  );
+  } catch (error: any) {
+    return next(new ErrorHandler(error.message, 500));
+  }
 };
 
 export const resetPasswordFormProcessHandler = async (
@@ -202,30 +189,28 @@ export const resetPasswordFormProcessHandler = async (
   const email = req.query.email;
   const password = req.query.newpassword;
 
-  // @ts-expect-error -> VERIFY EMAIL ID
-  db.execute(
-    "SELECT id FROM users WHERE email = ?;",
-    [email],
-    async (err: Error, results: any) => {
-      if (err) return next(new ErrorHandler(err.message, 500));
-      else {
-        if (results.length == 0)
-          return next(new ErrorHandler("Invalid Email!", 404));
-        const userId = results[0].id as string;
-        const hashedPassword = await Encrypter(password);
-        // @ts-expect-error
-        db.execute(
-          "UPDATE users SET password = ? WHERE id = ?;",
-          [hashedPassword, userId],
-          (err: Error, results: any) => {
-            if (err) return next(new ErrorHandler(err.message, 500));
-            // @ts-expect-error
-            db.execute(
-              "DELETE FROM password_recovery WHERE `user` = ?;",
-              [userId],
-              (err: Error, results: any) => {
-                if (err) return next(new ErrorHandler(err.message, 500));
-                res.status(200).send(`
+  try {
+    const [userData] = (await db.execute(
+      "SELECT id FROM users WHERE email = ?;",
+      [email]
+    )) as any;
+    // CHECK EMAIL VALIDITY
+    if (userData.length == 0)
+      return next(new ErrorHandler("Invalid Email!", 404));
+    const userId = userData[0].id as string;
+    const hashedPassword = await Encrypter(password);
+
+    // UPDATE PASSWORD
+    await db.execute("UPDATE users SET password = ? WHERE id = ?;", [
+      hashedPassword,
+      userId,
+    ]);
+
+    // DELETE PASSWORD RESET SESSION
+    await db.execute("DELETE FROM password_recovery WHERE `user` = ?;", [
+      userId,
+    ]);
+    res.status(200).send(`
                 <html>
                   <link
                   href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css"
@@ -253,12 +238,8 @@ export const resetPasswordFormProcessHandler = async (
                   </div>
                 </html>
                 `);
-                res.end();
-              }
-            );
-          }
-        );
-      }
-    }
-  );
+    res.end();
+  } catch (error: any) {
+    return next(new ErrorHandler(error.message, 500));
+  }
 };
