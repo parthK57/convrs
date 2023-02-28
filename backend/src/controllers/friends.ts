@@ -64,7 +64,7 @@ export const removeFriendHandler = async (req: any, res: any, next: any) => {
       "SELECT id, username FROM users WHERE username = ? OR username = ?;",
       [username, friendUsername]
     )) as any;
-    if (data.length == 0) return next(new ErrorHandler("Invalid data!", 400));
+    if (data.length != 2) return next(new ErrorHandler("Invalid data!", 400));
     const id1 = data[0].id;
     const id2 = data[1].id;
 
