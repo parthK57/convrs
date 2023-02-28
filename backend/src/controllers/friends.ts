@@ -5,7 +5,7 @@ import TimeStamp from "../Services/TimeStamp";
 import UUIDGenerator from "../Services/UUIDGenerator";
 
 const db = connectionPool;
-
+// TODO: REWORK FROM HERE
 export const addFriendHandler = async (req: any, res: any, next: any) => {
   const body: addFriendBody = req.body;
   const header = req.headers;
